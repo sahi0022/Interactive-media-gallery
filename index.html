@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Image Gallery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin: 20px;
+        }
+        
+        .image-container {
+            position: relative;
+            margin: 10px;
+            text-align: center;
+        }
+        
+        .gallery img {
+            width: 200px;
+            height: auto;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .gallery img:hover {
+            transform: scale(1.1);
+        }
+        
+        .title {
+            color: #000;
+            padding: 5px;
+            font-size: 16px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+        
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80%;
+        }
+        
+        .close {
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            cursor: pointer;
+        }
+        
+        .modal-caption {
+            color: #fff;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .prev, .next {
+            cursor: pointer;
+            position: absolute;
+            top: 50%;
+            width: auto;
+            padding: 16px;
+            margin-top: -50px;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            transition: 0.6s ease;
+            border-radius: 0 3px 3px 0;
+            user-select: none;
+        }
+
+        .next {
+            right: 0;
+            border-radius: 3px 0 0 3px;
+        }
+
+        .prev {
+            left: 0;
+            border-radius: 3px 0 0 3px;
+        }
+
+        .prev:hover, .next:hover {
+            background-color: rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="gallery" id="gallery">
+        
+    </div>
+
+    <div class="modal" id="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modal-image">
+        <a class="prev">&#10094;</a>
+        <a class="next">&#10095;</a>
+        <div id="caption" class="modal-caption"></div>
+    </div>
+
+    <script>
+        // Array of image Folder path and captions
+        const images = [
+            { path: 'images/Dubai.jpg', title: 'Dubai', caption: 'Dubai is a city and emirate in the United Arab Emirates known for luxury shopping, ultramodern architecture and a lively nightlife scene. Burj Khalifa, an 830m-tall tower, dominates the skyscraper-filled skyline. At its foot lies Dubai Fountain, with jets and lights choreographed to music. On artificial islands just offshore is Atlantis, The Palm, a resort with water and marine-animal parks' },
+
+            { path: 'images/California.jpg', title: 'California', caption: 'California, a western U.S. state, stretches from the Mexican border along the Pacific for nearly 900 miles. Its terrain includes cliff-lined beaches, redwood forest, the Sierra Nevada Mountains, Central Valley farmland and the Mojave Desert. The city of Los Angeles is the seat of the Hollywood entertainment industry. Hilly San Francisco is known for the Golden Gate Bridge, Alcatraz Island and cable cars' },
+
+            { path: 'images/Finland.jpg', title: 'Finland', caption: 'Finland was a province and then a grand duchy under Sweden from the 12th to the 19th centuries and an autonomous grand duchy of Russia after 1809. It gained complete independence in 1917. During World War II, Finland successfully defended its independence through cooperation with Germany and resisted subsequent invasions by the Soviet Union, albeit with some loss of territory' },
+
+            { path: 'images/Iceland.jpg', title: 'Iceland', caption: 'Iceland, a Nordic island nation, is defined by its dramatic landscape with volcanoes, geysers, hot springs and lava fields. Massive glaciers are protected in Vatnajökull and Snæfellsjökull national parks. Most of the population lives in the capital, Reykjavik, which runs on geothermal power and is home to the National and Saga museums, tracing Iceland’s Viking history' },
+
+            { path: 'images/Liberty tower.jpg', title: 'Liberty Tower', caption: 'Liberty Tower is a notable high-rise building located in the heart of Manhattan, New York City. This iconic structure, completed in 1909, is situated at 55 Liberty Street in the Financial District, close to major landmarks such as Wall Street and the New York Stock Exchange. Designed by prominent architect Henry Ives Cobb, Liberty Tower exemplifies the early 20th-century architectural style with its intricate facade, elaborate ornamentation, and a distinctive Gothic Revival influence' },
+
+            { path: 'images/New york.jpg', title: 'New York', caption: 'New York City, often simply called New York, is the largest and most populous city in the United States. Known as "The City That Never Sleeps," New York is renowned for its vibrant culture, diverse population, and its significant impact on commerce, finance, media, art, fashion, research, technology, education, and entertainment.' },
+
+            { path: 'images/Paris.jpg', title: 'Paris', caption: 'Paris (nicknamed the "City of light") is the capital city of France, and the largest city in France. The area is 105 square kilometres (41 square miles), and around 2.15 million people live there. If suburbs are counted, the population of the Paris area rises to 10.7 million people' },
+
+            { path: 'images/Parliament hill.jpg', title: 'Parliament Hill', caption: 'Parliament Hill, colloquially known as The Hill, is an area of Crown land on the southern bank of the Ottawa River that houses the Parliament of Canada in downtown Ottawa, Ontario, Canada' },
+
+            { path: 'images/Switzerland.jpg', title: 'Switzerland', caption: 'Switzerland is a mountainous Central European country, home to numerous lakes, villages and the high peaks of the Alps. Its cities contain medieval quarters, with landmarks like capital Bern’s Zytglogge clock tower and Lucerne’s wooden chapel bridge. The country is also known for its ski resorts and hiking trails. Banking and finance are key industries, and Swiss watches and chocolate are world renowned' },
+
+            { path: 'images/Taj mahal.jpg', title: 'Taj Mahal', caption: 'Taj Mahal is an ivory-white marble mausoleum on the right bank of the river Yamuna in Agra, Uttar Pradesh, India. It was commissioned in 1631 by the fifth Mughal emperor, Shah Jahan to house the tomb of his beloved wife, Mumtaz Mahal; it also houses the tomb of Shah Jahan himself' },
+            
+            { path: 'images/Toronto CN Tower.jpeg', title: 'Toronto CN Tower', caption: 'The CN Tower is a 553.3 m-high concrete communications and observation tower in Toronto, Ontario, Canada. Completed in 1976, it is located in downtown Toronto, built on the former Railway Lands. Its name "CN" referred to Canadian National, the railway company that built the tower' },
+
+            { path: 'images/hall.jpg', title: 'Albert hall', caption: 'The Albert Hall Museum in Jaipur is the oldest museum of the state and functions as the state museum of Rajasthan, India. The building is situated in Ram Niwas garden outside the city wall opposite New gate and is a fine example of Indo-Saracenic architecture. It is also called the Government Central Museum. It was considered one of the best 19th century museums for the variety of its collections. It was renovated in 2008 and reopened as one of the most advanced museums in India' }
+        ];
+
+        const gallery = document.getElementById('gallery');
+        const modal = document.getElementById('modal');
+        const modalImage = document.getElementById('modal-image');
+        const captionText = document.getElementById('caption');
+        let currentIndex = 0;
+
+        // Function to create and append images to the gallery
+        function createGallery(images) {
+            gallery.innerHTML = ''; 
+            images.forEach((image, index) => {
+                const imageContainer = document.createElement('div');
+                imageContainer.classList.add('image-container');
+
+                const img = document.createElement('img');
+                img.src = image.path;
+                img.alt = image.title;
+                img.dataset.index = index;
+                img.addEventListener('click', openModal);
+
+                const title = document.createElement('div');
+                title.classList.add('title');
+                title.textContent = image.title;
+
+                imageContainer.appendChild(img);
+                imageContainer.appendChild(title);
+                gallery.appendChild(imageContainer);
+            });
+        }
+
+        // Function to open the modal with clicked image
+        function openModal(event) {
+            currentIndex = Number(event.target.dataset.index);
+            showImage(currentIndex);
+            modal.style.display = 'block';
+        }
+
+        // Function to show the image at the given index
+        function showImage(index) {
+            const image = images[index];
+            modalImage.src = image.path;
+            captionText.textContent = image.caption;
+            modalImage.alt = image.caption;
+        }
+
+        // Function to close the modal
+        function closeModal(event) {
+            if (event.target === modal || event.target.className === 'close') {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Function to show the next image
+        function showNextImage() {
+            currentIndex = (currentIndex + 1) % images.length;
+            showImage(currentIndex);
+        }
+
+        // Function to show the previous image
+        function showPrevImage() {
+            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            showImage(currentIndex);
+        }
+
+        // Event listeners for navigation buttons
+        document.querySelector('.close').addEventListener('click', closeModal);
+        document.querySelector('.next').addEventListener('click', showNextImage);
+        document.querySelector('.prev').addEventListener('click', showPrevImage);
+
+        // Initial gallery creation
+        createGallery(images);
+    </script>
+</body>
+</html>
